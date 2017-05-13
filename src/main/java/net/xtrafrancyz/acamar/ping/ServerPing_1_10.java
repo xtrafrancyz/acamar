@@ -50,7 +50,7 @@ public class ServerPing_1_10 {
         }
     }
     
-    public PingResponse fetchData() throws IOException {
+    public void fetchData(PingResponse pingResponse) throws IOException {
         StatusResponse response;
         try (Socket socket = new Socket()) {
             socket.setSoTimeout(timeout);
@@ -89,6 +89,7 @@ public class ServerPing_1_10 {
             byte[] in = new byte[length];
             dataInputStream.readFully(in);  //read json string
             String json = new String(in);
+            /*
             long now = System.currentTimeMillis();
             dataOutputStream.writeByte(0x09); //size of packet
             dataOutputStream.writeByte(0x01); //0x01 for ping
@@ -101,16 +102,15 @@ public class ServerPing_1_10 {
             //    throw new IOException("Invalid packetID");
             //}
             long pingtime = dataInputStream.readLong(); //read response
+            */
             response = Acamar.gson.fromJson(json, StatusResponse.class);
-            response.time = (int) (now - pingtime);
+            //response.time = (int) (now - pingtime);
         }
-        
-        PingResponse res = new PingResponse();
-        res.online = true;
-        res.motd = response.description.getText();
-        res.onlinePlayers = response.players.online;
-        res.maxPlayers = response.players.max;
-        return res;
+    
+        pingResponse.online = true;
+        pingResponse.motd = response.description.getText();
+        pingResponse.onlinePlayers = response.players.online;
+        pingResponse.maxPlayers = response.players.max;
     }
     
     public class StatusResponse {
@@ -138,10 +138,6 @@ public class ServerPing_1_10 {
         
         public int getTime() {
             return time;
-        }
-        
-        public void setTime(int time) {
-            this.time = time;
         }
         
     }

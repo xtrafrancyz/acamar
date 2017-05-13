@@ -20,7 +20,7 @@ public class ServerPing_1_5 {
         this.server = server;
     }
     
-    public PingResponse fetchData() throws IOException {
+    public void fetchData(PingResponse response) throws IOException {
         try (Socket sock = new Socket()) {
             sock.setTcpNoDelay(true);
             sock.setSoTimeout(timeout);
@@ -38,12 +38,10 @@ public class ServerPing_1_5 {
             String string = new String(data, "UTF-16LE").substring(3);
             String[] split = string.split(new String(new char[]{0x00}));
             
-            PingResponse res = new PingResponse();
-            res.online = true;
-            res.motd = split[3];
-            res.onlinePlayers = Integer.parseInt(split[4]);
-            res.maxPlayers = Integer.parseInt(split[5]);
-            return res;
+            response.online = true;
+            response.motd = split[3];
+            response.onlinePlayers = Integer.parseInt(split[4]);
+            response.maxPlayers = Integer.parseInt(split[5]);
         }
     }
 }

@@ -33,17 +33,20 @@ public class ServerPingTask implements Runnable {
                 switch (server.version) {
                     case "1.11":
                     case "1.10":
-                        response = new ServerPing_1_10(app.config.timeout, server).fetchData();
+                        new ServerPing_1_10(app.config.timeout, server).fetchData(response);
                         break;
                     case "1.9":
                     case "1.8":
                     case "1.7":
-                        response = new ServerPing_1_7(app.config.timeout, server).fetchData();
+                        new ServerPing_1_7(app.config.timeout, server).fetchData(response);
                         break;
                     case "1.6":
                     case "1.5":
-                        response = new ServerPing_1_5(app.config.timeout, server).fetchData();
+                        new ServerPing_1_5(app.config.timeout, server).fetchData(response);
                         break;
+                    default:
+                        log.info("Unsupported version " + server.version + " of server " + server.id);
+                        return;
                 }
             } catch (IOException ex) {
                 //ex.printStackTrace();
@@ -53,14 +56,23 @@ public class ServerPingTask implements Runnable {
                 log.info("Server " + server + " updated " + response.onlinePlayers + "/" + response.maxPlayers);
             else
                 log.info("Server " + server + " is offline");
-            app.mysql.query(getQuery(server, response));
+            
+            String updateQuery = fillQuery(server, response.online ? app.config.mysql.onlineQuery : app.config.mysql.offlineQuery, response);
+            app.mysql.update(updateQuery, affectedRows -> {
+                if (affectedRows == 0 && !server.dbRowInserted) {
+                    server.dbRowInserted = true;
+                    app.mysql.update(fillQuery(server, app.config.mysql.insertQuery, response), affectedRows0 -> {
+                        app.mysql.query(updateQuery);
+                    });
+                }
+            });
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
     
-    public String getQuery(Server server, PingResponse response) {
-        Matcher m = REPLACE_PATTERN.matcher(response.online ? app.config.mysql.onlineQuery : app.config.mysql.offlineQuery);
+    private static String fillQuery(Server server, String query, PingResponse response) {
+        Matcher m = REPLACE_PATTERN.matcher(query);
         StringBuffer sb = new StringBuffer();
         while (m.find()) {
             switch (m.group(1)) {

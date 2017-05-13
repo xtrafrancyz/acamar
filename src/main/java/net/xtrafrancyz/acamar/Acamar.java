@@ -44,7 +44,7 @@ public class Acamar {
     
     public void start() {
         mysql.start();
-        final ScheduledExecutorService executor = Executors.newScheduledThreadPool(config.threads);
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(config.threads);
         for (Map.Entry<String, Server> entry : config.servers.entrySet())
             executor.scheduleWithFixedDelay(new ServerPingTask(this, entry.getValue()), 0, config.pollDelay, TimeUnit.MILLISECONDS);
         
@@ -54,7 +54,7 @@ public class Acamar {
         }));
     }
     
-    public void readConfig() throws IOException {
+    private void readConfig() throws IOException {
         File confFile = new File("config.json");
         if (!confFile.exists()) {
             this.config = new Config();
@@ -63,6 +63,8 @@ public class Acamar {
             new GsonBuilder().disableHtmlEscaping().create().toJson(config, Config.class, writer);
             writer.close();
             log.info("Created config.json");
+            log.info("Edit it for your needs and start Acamar again.");
+            System.exit(0);
         } else {
             this.config = gson.fromJson(
                 Files.readAllLines(confFile.toPath()).stream()

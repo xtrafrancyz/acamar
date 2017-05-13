@@ -20,18 +20,25 @@ public class Config {
         testServer.port = 25565;
         testServer.version = "1.9";
         servers.put("hypixel", testServer);
+        testServer = new Server();
+        testServer.host = "vimeworld.net";
+        testServer.port = 25565;
+        testServer.version = "1.6";
+        servers.put("vimeworld", testServer);
     }
     
     public static class Mysql {
-        public String url = "jdbc:mysql://127.0.0.1?useUnicode=true&characterEncoding=utf-8";
+        public String url = "jdbc:mysql://127.0.0.1/database?useUnicode=true&characterEncoding=utf-8";
         public String user = "root";
         public String pass = "";
         public String onlineQuery = "UPDATE servers SET updated = {time}, online = {online}, max = {max} WHERE id = {id}";
         public String offlineQuery = "UPDATE servers SET updated = 1 WHERE id = {id}";
+        public String insertQuery = "INSERT IGNORE INTO servers (id) VALUES ({id})";
     }
     
     public static class Server {
         public transient String id;
+        public transient boolean dbRowInserted = false;
         public String host;
         public int port;
         public String version;
