@@ -11,11 +11,11 @@ import java.net.Socket;
 /**
  * @author xtrafrancyz
  */
-public class ServerPing_1_5 {
+public class ServerPing_1_4 {
     private final int timeout;
     private final Server server;
     
-    public ServerPing_1_5(int timeout, Server server) {
+    public ServerPing_1_4(int timeout, Server server) {
         this.timeout = timeout;
         this.server = server;
     }

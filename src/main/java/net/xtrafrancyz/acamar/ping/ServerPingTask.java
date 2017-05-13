@@ -33,8 +33,6 @@ public class ServerPingTask implements Runnable {
                 switch (server.version) {
                     case "1.11":
                     case "1.10":
-                        new ServerPing_1_10(app.config.timeout, server).fetchData(response);
-                        break;
                     case "1.9":
                     case "1.8":
                     case "1.7":
@@ -42,7 +40,8 @@ public class ServerPingTask implements Runnable {
                         break;
                     case "1.6":
                     case "1.5":
-                        new ServerPing_1_5(app.config.timeout, server).fetchData(response);
+                    case "1.4":
+                        new ServerPing_1_4(app.config.timeout, server).fetchData(response);
                         break;
                     default:
                         log.info("Unsupported version " + server.version + " of server " + server.id);
@@ -61,9 +60,7 @@ public class ServerPingTask implements Runnable {
             app.mysql.update(updateQuery, affectedRows -> {
                 if (affectedRows == 0 && !server.dbRowInserted) {
                     server.dbRowInserted = true;
-                    app.mysql.update(fillQuery(server, app.config.mysql.insertQuery, response), affectedRows0 -> {
-                        app.mysql.query(updateQuery);
-                    });
+                    app.mysql.update(fillQuery(server, app.config.mysql.insertQuery, response), affectedRows0 -> app.mysql.query(updateQuery));
                 }
             });
         } catch (Exception ex) {

@@ -1,6 +1,6 @@
 # Acamar
 Acamar is an open source service for pinging Minecraft servers and write results into MySQL backend.
-It supports all Minecraft versions from 1.5 to 1.11 and probably future versions.
+It supports all Minecraft versions from 1.4 to 1.11 and probably future versions.
 
 ## Prerequisites
 - Java 8 or newer
