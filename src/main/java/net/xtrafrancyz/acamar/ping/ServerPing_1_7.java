@@ -10,20 +10,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
 
 /**
  * @author zh32 <zh32 at zh32.de>
  */
-@SuppressWarnings("unused")
-public class ServerPing_1_7 {
-    private final InetSocketAddress host;
-    private final int timeout;
-    
-    public ServerPing_1_7(int timeout, Config.Server server) {
-        this.host = new InetSocketAddress(server.host, server.port);
-        this.timeout = timeout;
+public class ServerPing_1_7 extends ServerPing {
+    public ServerPing_1_7(Config.Server server) {
+        super(server);
     }
     
     public int readVarInt(DataInputStream in) throws IOException {
@@ -52,19 +45,18 @@ public class ServerPing_1_7 {
         }
     }
     
-    public void fetchData(PingResponse pingResponse) throws IOException {
-        try (Socket socket = new Socket()) {
-            socket.setSoTimeout(this.timeout);
-            socket.connect(host, timeout);
-            
+    @SuppressWarnings("unused")
+    @Override
+    public void execute(PingResponse response) throws IOException {
+        connectTCP(socket -> {
             DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
             ByteArrayOutputStream b = new ByteArrayOutputStream();
             DataOutputStream handshake = new DataOutputStream(b);
             handshake.writeByte(0x00); //packet id for handshake
             writeVarInt(handshake, 5); //protocol version
-            writeVarInt(handshake, this.host.getHostString().length()); //host length
-            handshake.writeBytes(this.host.getHostString()); //host string
-            handshake.writeShort(host.getPort()); //port
+            writeVarInt(handshake, address.getHostString().length()); //host length
+            handshake.writeBytes(address.getHostString()); //host string
+            handshake.writeShort(address.getPort()); //port
             writeVarInt(handshake, 1); //state (1 for handshake)
             writeVarInt(dataOutputStream, b.size()); //prepend size
             dataOutputStream.write(b.toByteArray()); //write handshake packet
@@ -90,16 +82,16 @@ public class ServerPing_1_7 {
             JsonObject json = new JsonParser().parse(new String(in)).getAsJsonObject();
             
             JsonObject players = json.getAsJsonObject("players");
-            pingResponse.onlinePlayers = players.get("online").getAsInt();
-            pingResponse.maxPlayers = players.get("max").getAsInt();
+            response.onlinePlayers = players.get("online").getAsInt();
+            response.maxPlayers = players.get("max").getAsInt();
             
             JsonElement description = json.get("description");
             if (description.isJsonObject())
-                pingResponse.motd = description.getAsJsonObject().get("text").getAsString();
+                response.motd = description.getAsJsonObject().get("text").getAsString();
             else
-                pingResponse.motd = description.getAsString();
+                response.motd = description.getAsString();
             
-            pingResponse.online = true;
-        }
+            response.online = true;
+        });
     }
 }

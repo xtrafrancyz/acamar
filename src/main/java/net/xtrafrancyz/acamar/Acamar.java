@@ -27,6 +27,8 @@ public class Acamar {
     public static final Logger log = Logger.getLogger("Acamar");
     public static final Gson gson = new Gson();
     
+    private static Acamar instance;
+    
     static {
         log.setUseParentHandlers(false);
         ConsoleHandler cs = new ConsoleHandler();
@@ -78,7 +80,12 @@ public class Acamar {
         this.config.servers.forEach((id, server) -> server.id = id);
     }
     
+    public static Acamar instance() {
+        return instance;
+    }
+    
     public static void main(String[] args) throws Exception {
-        new Acamar().start();
+        instance = new Acamar();
+        instance.start();
     }
 }

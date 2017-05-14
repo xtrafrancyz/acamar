@@ -30,24 +30,27 @@ public class ServerPingTask implements Runnable {
         try {
             PingResponse response = new PingResponse();
             try {
+                ServerPing ping;
                 switch (server.version) {
                     case "1.11":
                     case "1.10":
                     case "1.9":
                     case "1.8":
                     case "1.7":
-                        new ServerPing_1_7(app.config.timeout, server).fetchData(response);
+                        ping = new ServerPing_1_7(server);
                         break;
                     case "1.6":
                     case "1.5":
                     case "1.4":
-                        new ServerPing_1_4(app.config.timeout, server).fetchData(response);
+                        ping = new ServerPing_1_4(server);
                         break;
                     default:
                         log.info("Unsupported version " + server.version + " of server " + server.id);
                         return;
                 }
+                ping.execute(response);
             } catch (IOException ex) {
+                response.online = false;
                 //ex.printStackTrace();
             }
             
