@@ -1,63 +1,64 @@
 # Acamar
+
 Acamar is an open source service for pinging Minecraft servers and write results into MySQL backend.
-It supports all Minecraft versions from 1.4 to 1.11 and probably future versions.
+It supports all Minecraft versions from 1.4.
 
-## Prerequisites
-- Java 8 or newer
-- Running MySQL or another compatible database (MariaDB, Amazon Aurora)
+# Installation
 
-## Installation
 1. Grab the latest version from the releases
-2. Run `java -Xmx128M -jar acamar-VERSION.jar`
-3. Edit `config.json` file
-4. Restart application
+2. Create a config file
+3. Run with `acamar -config config.toml`
 
-## Configuration
-```D
-{
-  "pollDelay": 3000, // Delay between pings in milliseconds
-  "timeout": 2000, // If the server does not respond after this time, then it will be considered offline
-  "threads": 3, // Maximum amount of concurrent ping requests
-  "mysql": {
-    "url": "jdbc:mysql://127.0.0.1/database?useUnicode=true&characterEncoding=utf-8", // JDBC URL
-    "user": "root", // Username for database
-    "pass": "", // Password for database
-    // Next query will be executed every time when server is online
-    "onlineQuery": "UPDATE servers SET updated = {time}, online = {online}, max = {max} WHERE id = {id}",
-    // Offline query will be executed every time when server is offline
-    "offlineQuery": "UPDATE servers SET updated = 1 WHERE id = {id}",
-    // Query will be executed only once, when nothing is updated with any of previous queries
-    "insertQuery": "INSERT IGNORE INTO servers (id) VALUES ({id})"
-  },
-  "servers": {
-    "hypixel": { // Server ID
-      "host": "mc.hypixel.net", // Server hostname or IP
-      "port": 25565, // Server port
-      "version": "1.9" // Server version (1.6, 1.7, 1.8, 1.9, 1.10 and so on)
-    },
-    "vimeworld": { // One more server
-      "host": "vimeworld.net",
-      "port": 25565,
-      "version": "1.6"
-    }
-  }
-}
-```
-In MySQL queries you can insert some data from ping result:
-- `{id}` - Server ID from config
-- `{motd}` - Server's Message of the day (description in servers list)
-- `{online}` - Amount of players online
-- `{max}` - Maximum amount of players
-- `{time}` - Current unix timestamp in seconds
+# Configuration
 
-If you don't have suitable table in your database, you can create one:
-```SQL
-CREATE TABLE `servers` (
-  `id` varchar(30) NOT NULL DEFAULT '',
-  `updated` int(11) DEFAULT '0',
-  `max` int(11) DEFAULT '0',
-  `online` int(11) DEFAULT '0',
-  `motd` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+Acamar uses `config.toml` file in the working directory as the config. You can change it by the flag `-config foo.toml`.
+
+```toml
+# Ping period. Valid time units are "ms", "s", "m", "h".
+Period = "3s"
+# Timeout for treating the server as offline.
+Timeout = "2s"
+
+[mysql]
+# Parameters for MySQL connection
+# https://github.com/go-sql-driver/mysql#dsn-data-source-name
+Connect = "user:password@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4,utf8"
+
+# The following variables can be used in all queries:
+#    :name     - string - server name from the config
+#    :address  - string - server address from the config
+#    :latency  - int    - ping time in ms
+#    :online   - int    - online players count
+#    :max      - int    - max players count
+#    :time     - int    - current unix timestamp
+#    :favicon  - string - server icon in base64 format
+#    :protocol - int    - protocol version number
+#    :version  - string - version string
+#    :motd     - string - server MOTD without formatting (description in the servers list)
+
+# This query will be executed before any pings to server
+Insert = "INSERT IGNORE INTO servers (id) VALUES (:name)"
+# This qeury will be executed every time after a ping if the server is online
+Online = "UPDATE servers SET updated = :time, online = :online, max = :max, latency = :latency, motd = :motd WHERE id = :name"
+# The same, but for an offline server
+Offline = "UPDATE servers SET updated = :time, online = 0, max = 0 WHERE id = :name"
+
+# Minimal configuration for the server
+[[Target]]
+Name = "Hypixel"
+Address = "mc.hypixel.net"
+
+# If you have a server with multiple network interfaces you may
+# want to choose from which one to send ping requests
+[[Target]]
+Name = "VimeWorld.ru"
+Address = "vimeworld.net"
+LocalAddress = "123.123.123.123"
+
+# An example of a legacy (version <= 1.6) server with a period other than the default
+[[Target]]
+Name = "Vime 1.6.4"
+Address = "m2.htz.vime.one:25571"
+Legacy = true
+Period = "5s"
 ```
