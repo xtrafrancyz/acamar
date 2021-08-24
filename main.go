@@ -55,7 +55,7 @@ func main() {
 		go targetRoutine(target)
 	}
 
-	time.Sleep(time.Minute * 99999)
+	time.Sleep(time.Duration(1<<63 - 1))
 }
 
 func targetRoutine(target Target) {
