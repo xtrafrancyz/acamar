@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"acamar/ping"
+
 	"github.com/BurntSushi/toml"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -15,6 +16,7 @@ import (
 type config struct {
 	Timeout duration
 	Period  duration
+	Log     bool
 
 	Mysql struct {
 		Connect string
@@ -111,7 +113,7 @@ func targetRoutine(target Target) {
 		adapter.Time = time.Now().Unix()
 		if _, err := db.NamedExec(query, adapter); err != nil {
 			log.Println(target.Name, "mysql:", err)
-		} else {
+		} else if conf.Log {
 			if pingError != nil {
 				log.Printf(
 					"%s: Error: %v",
